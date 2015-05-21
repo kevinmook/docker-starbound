@@ -1,0 +1,50 @@
+#!/bin/bash -e
+
+DIR=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
+
+usage() {
+  cat <<END
+Usage: $progname OPTIONS
+  -h            Display this help text
+  -d            Specify data container (default is starbound_data)
+
+${*:-}
+END
+  exit 1
+}
+
+while getopts "hd:" OPTION ; do
+  case $OPTION in
+    h)
+      usage
+      ;;
+    d)
+      DATA_CONTAINER=$OPTARG
+      ;;
+    *)
+      usage
+      ;;
+  esac
+done
+
+if [ -z "$DOCKER_HOST" ]; then
+  echo "Warning: DOCKER_HOST is not set. Make sure you've set your docker env variables"
+  echo "Using default values but this may not work"
+fi
+export DOCKER_HOST=${DOCKER_HOST:-tcp://192.168.99.100:2376}
+export DOCKER_CERT_PATH=${DOCKER_CERT_PATH:-$HOME/.docker/machine/machines/dev}
+export DOCKER_TLS_VERIFY=${DOCKER_TLS_VERIFY:-1}
+
+DATA_CONTAINER=${DATA_CONTAINER:-starbound_data}
+
+RESULT=$(docker run -i -t --name $DATA_CONTAINER -v /data phusion/baseimage:0.9.16 echo "Created container $DATA_CONTAINER" 2>&1) || ERROR_CODE=$?
+ERROR_CODE=${ERROR_CODE:-0}
+
+if [ $ERROR_CODE -ne 0 ]; then
+  if [[ $RESULT != *"is already in use by container"* ]]; then
+    echo "Error making data container:"
+    echo $RESULT
+  fi
+else
+  echo $RESULT
+fi

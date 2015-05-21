@@ -1,0 +1,4 @@
+#!/bin/bash
+set -e
+
+/data/steam/starbound_server/linux64/starbound_server

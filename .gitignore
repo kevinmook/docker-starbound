@@ -1,0 +1,5 @@
+.DS_Store
+data
+backup
+configs/steam_account
+configs/steam_password
